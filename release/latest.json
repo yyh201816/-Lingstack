@@ -1,0 +1,11 @@
+{
+  "version": "0.3.1",
+  "notes": "灵栈 LingStack v0.3.1 — 工作台壳层统一 + Codex 交互重构 + 补丁回滚链修复",
+  "pub_date": "2026-07-05T20:30:00+08:00",
+  "platforms": {
+    "windows-x86_64": {
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVROVZRaWQxaGhRY1d0WDUvMk9laTFTVk1US2Q3YVN3em8vWVoxQmNWVkttNzdoOTJvR1NDVndVMlFQNGZ5TklReEJKQ0VraDdTTG1rRzFlbVFEeHJNM0NTRUhJamdIY0EwPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzgzMjU1MTkzCWZpbGU654G15qCIIExpbmdTdGFja18wLjMuMV94NjQtc2V0dXAuZXhlCmJyM2N0VC9ra29aZXpHRDFLbHNZYjh0SE1DUUkrVWVRSE5IWGx5V1M1RGVkeHBjRzMzRFhoS1ZMUlU5N3lCTzkvWGp5NzJBaE5neUFoZVBhcWVNM0NRPT0K",
+      "url": "https://ai.tadanpay.cn/updates/releases/v0.3.1/lingstack_0.3.1_x64_setup.exe"
+    }
+  }
+}

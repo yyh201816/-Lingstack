@@ -25,7 +25,7 @@ import type { ThemeMode } from '@/stores/app.store'
 import { isConfigured } from '@/services/chat/chat.service'
 
 
-import { checkForUpdate, downloadAndInstall, isChecking, updateInfo, progress, lastCheckTime } from '@/services/updater/updater.service'
+import { checkForUpdate, downloadAndInstall, isChecking, updateInfo, progress, lastCheckTime, lastError, currentChannel } from '@/services/updater/updater.service'
 
 
 import AddModelModal from './AddModelModal.vue'
@@ -984,7 +984,7 @@ function formatBytes(bytes: number): string {
 
 
 
-          <!-- 错误信息 -->
+          <!-- 错误信息（含诊断建议） -->
 
 
           <div v-if="progress.phase === 'error'" class="update-card__error">
@@ -993,7 +993,28 @@ function formatBytes(bytes: number): string {
             <AlertCircle :size="14" />
 
 
-            <span>{{ progress.error }}</span>
+            <div class="update-card__error-body">
+
+
+              <span class="update-card__error-msg">{{ progress.error }}</span>
+
+
+              <span v-if="lastError?.kind === 'signature'" class="update-card__error-hint">
+                签名校验失败 — 请通知开发者检查服务器 latest.json 中 signature 字段是否为空或不匹配
+              </span>
+
+
+              <span v-else-if="lastError?.kind === 'network'" class="update-card__error-hint">
+                无法连接更新服务器 — 请检查网络连接或防火墙设置
+              </span>
+
+
+              <span v-else-if="lastError?.kind === 'server'" class="update-card__error-hint">
+                服务器返回异常 — 更新源可能正在维护中
+              </span>
+
+
+            </div>
 
 
           </div>
@@ -1106,6 +1127,7 @@ function formatBytes(bytes: number): string {
 
               更新源：ai.tadanpay.cn（HTTPS）
               <br>当前版本：v{{ appVersion }}
+              <br>更新通道：{{ currentChannel }}
               <br>签名密钥保存在本机安全目录，未提交到代码仓库。
             </p>
 
@@ -2505,7 +2527,7 @@ function formatBytes(bytes: number): string {
   display: flex;
 
 
-  align-items: center;
+  align-items: flex-start;
 
 
   gap: 8px;

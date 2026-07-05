@@ -16,7 +16,7 @@ import { ref, readonly } from 'vue'
 
 // ========== 类型 ==========
 
-export type ReleaseChannel = 'nightly' | 'alpha' | 'beta' | 'rc' | 'stable-internal'
+export type ReleaseChannel = 'nightly' | 'alpha' | 'beta' | 'rc' | 'stable-internal' | 'releases'
 
 export interface UpdateInfo {
   version: string
@@ -24,6 +24,21 @@ export interface UpdateInfo {
   body: string
   available: boolean
   channel?: ReleaseChannel
+}
+
+/** 细粒度错误分类，帮助用户和开发者诊断更新失败原因 */
+export type UpdaterErrorKind =
+  | 'network'       // DNS/连接/超时
+  | 'signature'     // 签名校验失败 — latest.json 中 signature 为空或不匹配
+  | 'server'        // HTTP 非200
+  | 'no_update'     // 已是最新
+  | 'platform'      // 不支持的平台
+  | 'unknown'
+
+export interface UpdaterError {
+  kind: UpdaterErrorKind
+  message: string
+  raw?: string
 }
 
 export interface UpdateProgress {
@@ -86,6 +101,36 @@ export const updateInfo = readonly(_updateInfo)
 export const progress = readonly(_progress)
 export const lastCheckTime = readonly(_lastCheckTime)
 
+// ========== 错误分类 ==========
+
+/**
+ * 将 Tauri updater 抛出的原始错误归类为可操作的诊断类别。
+ * 签名错误最常见也最隐蔽 — Tauri 抛出的信息可能只是 "invalid signature"
+ * 或 "failed to verify signature"，需要显式标记出来。
+ */
+function classifyError(e: any): UpdaterError {
+  const msg: string = e?.message ?? e?.toString() ?? '未知错误'
+  const lower = msg.toLowerCase()
+
+  if (lower.includes('signature') || lower.includes('verify') || lower.includes('invalid')) {
+    return {
+      kind: 'signature',
+      message: '更新签名校验失败 — 服务器 latest.json 中 signature 可能为空或不匹配',
+      raw: msg,
+    }
+  }
+  if (lower.includes('network') || lower.includes('fetch') || lower.includes('timeout') || lower.includes('dns') || lower.includes('connect')) {
+    return { kind: 'network', message: `网络错误: ${msg}`, raw: msg }
+  }
+  if (lower.includes('404') || lower.includes('500') || lower.includes('status')) {
+    return { kind: 'server', message: `服务器响应异常: ${msg}`, raw: msg }
+  }
+  if (lower.includes('platform') || lower.includes('unsupported')) {
+    return { kind: 'platform', message: `当前平台不支持更新: ${msg}`, raw: msg }
+  }
+  return { kind: 'unknown', message: msg, raw: msg }
+}
+
 // ========== 内部：浏览器 mock ==========
 
 async function mockCheck(): Promise<UpdateInfo> {
@@ -101,70 +146,101 @@ async function mockCheck(): Promise<UpdateInfo> {
 
 // ========== 公开 API ==========
 
-/** 检查更新 */
+/** 上次错误（用于 UI 展示诊断信息） */
+const _lastError = ref<UpdaterError | null>(null)
+export const lastError = readonly(_lastError)
+
+/**
+ * 检查更新（带通道回退）。
+ * 优先检查当前通道，如果失败且错误为 signature/server，
+ * 自动回退到 releases 通道（最稳定的正式版通道）。
+ */
 export async function checkForUpdate(): Promise<UpdateInfo> {
   _isChecking.value = true
+  _lastError.value = null
   _progress.value = { ..._progress.value, phase: 'checking', error: undefined }
 
-  try {
-    // 尝试加载 Tauri updater API
-    const updater = await import('@tauri-apps/plugin-updater').catch(() => null)
+  const channelsToTry: ReleaseChannel[] = [
+    _currentChannel.value,
+    ...(_currentChannel.value !== 'releases' ? ['releases' as ReleaseChannel] : []),
+  ]
 
-    if (updater) {
-      const update = await updater.check()
-      if (update) {
-        const info: UpdateInfo = {
-          version: update.version,
-          date: update.date ?? '',
-          body: update.body ?? '',
-          available: true,
+  let lastErr: UpdaterError | null = null
+
+  for (const channel of channelsToTry) {
+    try {
+      const updater = await import('@tauri-apps/plugin-updater').catch(() => null)
+
+      if (updater) {
+        const update = await updater.check()
+        if (update) {
+          const info: UpdateInfo = {
+            version: update.version,
+            date: update.date ?? '',
+            body: update.body ?? '',
+            available: true,
+            channel,
+          }
+          _updateInfo.value = info
+          _lastCheckTime.value = new Date().toLocaleTimeString()
+          _progress.value = { ..._progress.value, phase: 'idle' }
+          return info
+        } else {
+          const info: UpdateInfo = {
+            version: '', date: '', body: '',
+            available: false, channel,
+          }
+          _updateInfo.value = info
+          _lastCheckTime.value = new Date().toLocaleTimeString()
+          _progress.value = { ..._progress.value, phase: 'idle' }
+          return info
         }
-        _updateInfo.value = info
-        _lastCheckTime.value = new Date().toLocaleTimeString()
-        _progress.value = { ..._progress.value, phase: 'idle' }
-        return info
       } else {
-        const info: UpdateInfo = {
-          version: '',
-          date: '',
-          body: '',
-          available: false,
-        }
+        const info = await mockCheck()
         _updateInfo.value = info
         _lastCheckTime.value = new Date().toLocaleTimeString()
         _progress.value = { ..._progress.value, phase: 'idle' }
         return info
       }
-    } else {
-      // 浏览器环境
-      const info = await mockCheck()
-      _updateInfo.value = info
-      _lastCheckTime.value = new Date().toLocaleTimeString()
-      _progress.value = { ..._progress.value, phase: 'idle' }
-      return info
+    } catch (e: any) {
+      lastErr = classifyError(e)
+      // 签名或网络错误 → 尝试下一个通道
+      if (lastErr.kind === 'signature' || lastErr.kind === 'network') {
+        console.warn(`[Updater] 通道 ${channel} 失败: ${lastErr.message}, 回退到下一通道`)
+        continue
+      }
+      // 其他错误直接抛出
+      _lastError.value = lastErr
+      _progress.value = { ..._progress.value, phase: 'error', error: lastErr.message }
+      throw lastErr
     }
-  } catch (e: any) {
-    _progress.value = { ..._progress.value, phase: 'error', error: e.message ?? '检查更新失败' }
-    throw e
-  } finally {
-    _isChecking.value = false
   }
+
+  // 所有通道都失败了
+  _lastError.value = lastErr
+  _progress.value = { ..._progress.value, phase: 'error', error: lastErr?.message ?? '所有更新通道均不可用' }
+  throw lastErr ?? new Error('所有更新通道均不可用')
 }
 
 /** 下载并安装更新 */
 export async function downloadAndInstall(): Promise<void> {
+  _lastError.value = null
   _progress.value = { ..._progress.value, phase: 'downloading', percent: 0, error: undefined }
 
   try {
     const updater = await import('@tauri-apps/plugin-updater').catch(() => null)
     if (!updater) {
-      _progress.value = { ..._progress.value, phase: 'error', error: '当前环境不支持更新（需要 Tauri 桌面环境）' }
+      const err: UpdaterError = { kind: 'platform', message: '当前环境不支持更新（需要 Tauri 桌面环境）' }
+      _lastError.value = err
+      _progress.value = { ..._progress.value, phase: 'error', error: err.message }
       return
     }
 
     const update = await updater.check()
     if (!update) {
-      _progress.value = { ..._progress.value, phase: 'error', error: '没有可用的更新' }
+      const err: UpdaterError = { kind: 'no_update', message: '没有可用的更新' }
+      _lastError.value = err
+      _progress.value = { ..._progress.value, phase: 'error', error: err.message }
       return
     }
 
@@ -202,14 +278,17 @@ export async function downloadAndInstall(): Promise<void> {
       await process.relaunch()
     }
   } catch (e: any) {
-    _progress.value = { ..._progress.value, phase: 'error', error: e.message ?? '下载安装失败' }
-    throw e
+    const err = classifyError(e)
+    _lastError.value = err
+    _progress.value = { ..._progress.value, phase: 'error', error: err.message }
+    throw err
   }
 }
 
 /** 重置更新状态 */
 export function resetUpdateState(): void {
   _updateInfo.value = null
+  _lastError.value = null
   _progress.value = { percent: 0, downloaded: 0, total: 0, phase: 'idle' }
   _lastCheckTime.value = null
 }
