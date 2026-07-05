@@ -1,0 +1,104 @@
+/* LingStack Design System v2 ? ?? TailAdmin ???? */
+:root {
+  /* === ???? === */
+  --ls-bg-app: #FCFCFD;
+  --ls-bg-shell: #F9FAFB;
+  --ls-bg-surface: #FFFFFF;
+  --ls-bg-surface-2: #F9FBFF;
+  --ls-bg-panel: #F2F4F7;
+  --ls-bg-panel-hover: #E4E7EC;
+  --ls-bg-elevated: #FFFFFF;
+  --ls-bg-muted: #F2F4F7;
+  --ls-bg-soft: #F9FAFB;
+
+  /* === ???? === */
+  --ls-text-primary: #101828;
+  --ls-text-secondary: #344054;
+  --ls-text-muted: #667085;
+  --ls-text-subtle: #98A2B3;
+  --ls-text-faint: #D0D5DD;
+  --ls-text-on-accent: #FFFFFF;
+  --ls-text-strong: #101828;
+  --ls-text-main: #344054;
+  --ls-text-body: #667085;
+  --ls-text-weak: #98A2B3;
+  --ls-text-hint: #D0D5DD;
+
+  /* === TailAdmin Brand ?? === */
+  --ls-brand-25: #F2F7FF;
+  --ls-brand-50: #ECF3FF;
+  --ls-brand-100: #DDE9FF;
+  --ls-brand-200: #C2D6FF;
+  --ls-brand-300: #9CB9FF;
+  --ls-brand-400: #7592FF;
+  --ls-brand-500: #465FFF;
+  --ls-brand-600: #3641F5;
+  --ls-brand-700: #2A31D8;
+  --ls-brand-800: #252DAE;
+  --ls-brand-900: #262E89;
+
+  /* === ?? === */
+  --ls-border-soft: rgba(16, 24, 40, 0.06);
+  --ls-border-default: #E4E7EC;
+  --ls-border-strong: rgba(16, 24, 40, 0.14);
+  --ls-divider: #E4E7EC;
+
+  /* === ??? (TailAdmin) === */
+  --ls-success-25: #F6FEF9;
+  --ls-success-50: #ECFDF3;
+  --ls-success-100: #D1FADF;
+  --ls-success-200: #A6F4C5;
+  --ls-success-300: #6CE9A6;
+  --ls-success-400: #32D583;
+  --ls-success-500: #12B76A;
+  --ls-success-600: #039855;
+  --ls-success-700: #027A48;
+
+  --ls-warning-25: #FFFCF5;
+  --ls-warning-50: #FFFAEB;
+  --ls-warning-100: #FEF0C7;
+  --ls-warning-200: #FEDF89;
+  --ls-warning-300: #FEC84B;
+  --ls-warning-400: #FDB022;
+  --ls-warning-500: #F79009;
+  --ls-warning-600: #DC6803;
+
+  --ls-danger-25: #FFFBFA;
+  --ls-danger-50: #FEF3F2;
+  --ls-danger-100: #FEE4E2;
+  --ls-danger-200: #FECDCA;
+  --ls-danger-300: #FDA29B;
+  --ls-danger-400: #F97066;
+  --ls-danger-500: #F04438;
+  --ls-danger-600: #D92D20;
+
+  --ls-info-25: #F5FAFF;
+  --ls-info-50: #EFF8FF;
+  --ls-info-100: #D1E9FF;
+  --ls-info-200: #B2DDFF;
+  --ls-info-300: #84CAFF;
+  --ls-info-400: #53B1FD;
+  --ls-info-500: #2E90FA;
+  --ls-info-600: #1570EF;
+
+  /* === ?????? === */
+  --ls-accent: var(--ls-brand-500);
+  --ls-accent-hover: var(--ls-brand-600);
+  --ls-accent-soft: var(--ls-brand-50);
+  --ls-accent-text: var(--ls-brand-500);
+  --ls-success: var(--ls-success-500);
+  --ls-success-soft: var(--ls-success-50);
+  --ls-warning: var(--ls-warning-500);
+  --ls-warning-soft: var(--ls-warning-50);
+  --ls-danger: var(--ls-danger-500);
+  --ls-danger-soft: var(--ls-danger-50);
+
+  /* === ?? shadow === */
+  --ls-shadow-xs: 0 1px 2px rgba(16,24,40,0.04);
+  --ls-shadow-sm: 0 1px 3px rgba(16,24,40,0.06), 0 1px 2px rgba(16,24,40,0.04);
+  --ls-shadow-md: 0 4px 12px rgba(16,24,40,0.06), 0 2px 4px rgba(16,24,40,0.04);
+  --ls-shadow-lg: 0 10px 24px rgba(16,24,40,0.08), 0 4px 8px rgba(16,24,40,0.04);
+  --ls-shadow-xl: 0 20px 40px rgba(16,24,40,0.10);
+  --ls-shadow-input-focus: 0 0 0 4px rgba(70,95,255,0.12);
+  --ls-shadow-theme-xs: 0 1px 2px rgba(16,24,40,0.05);
+}

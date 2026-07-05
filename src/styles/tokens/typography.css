@@ -1,0 +1,49 @@
+/* LingStack Typography ? ?? TailAdmin + ???? */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;650;700&display=swap');
+
+:root {
+  --ls-font-sans: "Inter", "PingFang SC", "Microsoft YaHei", "Segoe UI", system-ui, sans-serif;
+  --ls-font-mono: "JetBrains Mono", "Cascadia Code", "SF Mono", "Consolas", monospace;
+
+  /* ???? */
+  --ls-font-display: 34px;
+  --ls-font-h1: 24px;
+  --ls-font-h2: 18px;
+  --ls-font-body: 14px;
+  --ls-font-body-sm: 13px;
+  --ls-font-caption: 12px;
+  --ls-font-micro: 11px;
+
+  /* TailAdmin ?? */
+  --ls-text-xs: 12px;
+  --ls-text-sm: 13px;
+  --ls-text-md: 14px;
+  --ls-text-lg: 16px;
+  --ls-text-xl: 18px;
+  --ls-text-2xl: 20px;
+  --ls-text-theme-sm: 14px;
+  --ls-text-theme-xs: 12px;
+
+  /* ?? */
+  --ls-weight-display: 650;
+  --ls-weight-title: 600;
+  --ls-weight-subtitle: 500;
+  --ls-weight-body: 400;
+  --ls-font-weight-normal: 400;
+  --ls-font-weight-medium: 500;
+  --ls-font-weight-semibold: 600;
+  --ls-font-weight-bold: 700;
+
+  /* ?? */
+  --ls-leading-display: 1.2;
+  --ls-leading-title: 1.3;
+  --ls-leading-body: 1.5;
+}
+
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: local("Inter"), local("Inter Variable");
+}

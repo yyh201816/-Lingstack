@@ -1,0 +1,48 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Local workbench and build outputs
+.trae/
+release/
+server/
+src-tauri/target/
+gcm-diagnose.log
+
+# Local deployment helpers and screenshots
+ssh-sync.py
+ssh-auto.ps1
+ssh-automate.ps1
+nginx-fix.py
+nginx-fix2.py
+nginx-fix3.py
+nginx-fix4.py
+playwright-home.png
+playwright-home-fixed.png
+playwright-home-fixed-2.png
+
+# Bundles and signatures
+*.exe
+*.sig
+*.zip

@@ -1,0 +1,857 @@
+下面这份是可以直接发给 Trae 的 **《灵栈官网 Codex 风格改造开发文档》**。我按 Codex 官网的页面信息架构、视觉气质、交互逻辑、组件拆分、灵栈适配方案来写。注意：这里是**借鉴 Codex 的产品叙事和高级极简风格**，不是逐像素照抄 OpenAI 官网。
+
+---
+
+# 灵栈 LingStack 官网改造开发文档
+
+## 目标：Codex 风格的极简 AI Agent 产品官网
+
+## 一、参考对象拆解：Codex 官网的信息架构
+
+Codex 官网首页的核心定位非常直接：它把 Codex 定义成“助力构建并交付产品的 AI 编程智能体”，首屏只保留产品名、核心一句话、CTA 和平台可用性说明，没有复杂卖点堆叠。([OpenAI][1])
+
+Codex 页面整体不是传统 SaaS 官网的“功能大列表”，而是一个**产品能力叙事页**：
+
+```text
+顶部导航
+→ Hero 首屏
+→ Agent 编程能力说明
+→ 多智能体工作流
+→ Skill 工作流
+→ 后台自动化
+→ 质量与代码审查
+→ 多场景入口：App / IDE / Terminal
+→ 用户评价
+→ 最终 CTA
+→ Footer
+```
+
+OpenAI 官方页面中，Codex 的能力被分成几个关键叙事点：它可以处理实际工程任务，包括功能开发、复杂重构、代码迁移；它是智能体式编码的指挥中心，可以支持多个项目并行工作；它通过 Skills 适应团队工作方式；它也强调后台自动化和代码质量。([OpenAI][1])
+
+这对灵栈官网有非常强的参考价值：**不要把官网做成“功能菜单展示”，而要做成“AI Agent 能力进化路线展示”。**
+
+---
+
+## 二、Codex 官网 UI 风格拆解
+
+### 1. 视觉关键词
+
+Codex 官网整体气质是：
+
+```text
+极简
+克制
+专业
+留白多
+低装饰
+产品截图主导
+文字少但精准
+淡蓝/白色柔和渐变
+黑白灰为主
+少量品牌色点缀
+```
+
+页面中的图片说明多次出现“蓝色和白色的柔和渐变”，同时产品图以真实应用界面为主，例如工作空间、项目列表、任务、Skill 创建弹窗、提交对话框、确认面板、终端界面等。([OpenAI][1])
+
+灵栈应该借鉴这一点：**官网主视觉不要用抽象 3D 球、赛博背景、AI 大脑插画，而要用真实产品界面 Mockup。**
+
+---
+
+### 2. 页面节奏
+
+Codex 首页节奏大概是：
+
+```text
+大标题极简开场
+↓
+一句话定义产品
+↓
+一个主 CTA
+↓
+一个平台可用性提示
+↓
+进入产品能力分段
+↓
+每段一个能力主题 + 一张产品图
+↓
+最后用评价和 CTA 收口
+```
+
+它不是“上来就介绍 20 个功能”，而是一步步告诉用户：
+
+```text
+它是什么
+它能做什么
+它如何融入开发流程
+它可以在哪些场景使用
+别人为什么信任它
+你现在该怎么开始
+```
+
+灵栈官网也应该采用这种节奏。
+
+---
+
+## 三、Codex 官网交互逻辑拆解
+
+### 1. 顶部导航逻辑
+
+顶部导航极简，主要作用不是复杂跳转，而是提供信任感和主入口。
+
+建议灵栈官网顶部导航：
+
+```text
+左侧：LingStack / 灵栈 Logo
+中间：产品、能力、下载、文档、路线图
+右侧：登录 / 下载 Beta
+```
+
+交互要求：
+
+```text
+1. 吸顶 sticky
+2. 滚动后增加轻微 backdrop blur
+3. 背景从透明变为半透明白
+4. 移动端折叠为菜单
+5. CTA 始终可见
+```
+
+---
+
+### 2. Hero 首屏逻辑
+
+Codex 首屏最关键的是：**先定义产品，而不是先解释功能**。
+
+灵栈首屏应该这样：
+
+```text
+LingStack 灵栈
+
+连接所有大模型，让 AI 真正进入你的开发工作流。
+
+一个面向中文开发者的多模型 AI Agent 工作台。
+支持本地项目、代码修改、终端执行、服务器运维、Skill 编排与自定义 API。
+
+[下载 Windows Beta] [查看开发文档]
+Available for Windows · macOS / Web / Mobile coming later
+```
+
+首屏视觉建议：
+
+```text
+左侧：大标题 + 文案 + CTA
+右侧：LingStack 产品界面 Mockup
+背景：浅灰白 + 极淡蓝色渐变光晕
+```
+
+不要使用花哨动画。Codex 的高级感来自克制，而不是炫技。
+
+---
+
+### 3. 产品能力分段逻辑
+
+Codex 页面把能力拆成“实际工程任务”“多智能体工作流”“Skills”“后台自动化”“质量标准”等。([OpenAI][1])
+
+灵栈可以改造成以下 5 段：
+
+#### Section 1：为真实开发任务而生
+
+对应 Codex 的“为实际工程任务的核心需求而打造”。
+
+灵栈文案：
+
+```text
+为真实开发任务而生
+
+从修复 Bug、理解旧项目，到重构页面、生成代码补丁，灵栈可以读取你的本地项目上下文，让 AI 不再只是聊天，而是参与真实开发流程。
+```
+
+视觉：
+
+```text
+展示 LingStack 工作台：
+左侧项目树
+中间 Agent 对话
+右侧当前文件上下文
+底部 Command Bar
+```
+
+---
+
+#### Section 2：多模型 Agent 指挥中心
+
+对应 Codex 的“多智能体工作流指挥中心”。Codex 官方强调它可以在多个项目间并行工作，并作为智能体式编码的指挥中心。([OpenAI][1])
+
+灵栈文案：
+
+```text
+多模型 Agent 指挥中心
+
+在同一个工作台中接入 GPT、DeepSeek、豆包、通义、小米 MiMo、Ollama 和自定义 OpenAI-Compatible API，根据任务自由切换模型。
+```
+
+视觉：
+
+```text
+模型选择器卡片
+任务队列
+不同 Agent 状态：Thinking / Reading files / Generating diff / Waiting confirm
+```
+
+---
+
+#### Section 3：Skill 让工作流可复用
+
+Codex 页面强调 Skills 可以让 Codex 不只是写代码，还能参与代码理解、原型构建、文档编写，并保持团队标准。([OpenAI][1])
+开发者文档也说明，Skills 是可复用工作流的作者格式，可以包含说明、资源和可选脚本，并在需要时被加载。([OpenAI开发者][2])
+
+灵栈文案：
+
+```text
+用 Skill 固化你的开发经验
+
+把常见任务沉淀成可复用 Skill：Vue 页面修复、Go 接口排查、Nginx 502 分析、支付回调检查、项目自我补足。
+```
+
+视觉：
+
+```text
+Skill Center 卡片
+Skill 详情面板
+执行步骤：
+读取项目 → 分析问题 → 生成计划 → 输出修改建议
+```
+
+---
+
+#### Section 4：从本地项目到终端与服务器
+
+Codex 开发者文档说明，Codex CLI 可以在终端本地运行，读取、修改并运行选定目录中的代码。([OpenAI开发者][3])
+这对灵栈非常关键，因为灵栈未来要做本地项目、终端、SSH 服务器运维。
+
+灵栈文案：
+
+```text
+从代码到终端，再到服务器
+
+灵栈不止能回答问题，还可以连接你的本地项目、命令行和服务器环境，帮助你定位构建错误、分析日志、生成修复方案。
+```
+
+视觉：
+
+```text
+三栏卡片：
+Local Project
+Terminal
+Server
+```
+
+---
+
+#### Section 5：确认、Diff、回滚，保持可控
+
+Codex 页面展示了提交对话框、变更摘要、分支名称、文件改动数量、新增删除行，以及应用到本地工作区的确认面板。([OpenAI][1])
+
+灵栈文案：
+
+```text
+每一次修改都清晰可见
+
+灵栈生成代码修改前会展示计划，应用前展示 Diff，写入前自动备份，让 AI 修改代码也能保持可追踪、可确认、可回滚。
+```
+
+视觉：
+
+```text
+Diff Preview
+Changed files
+Apply changes
+Rollback
+```
+
+---
+
+## 四、灵栈官网推荐页面结构
+
+### 页面结构总览
+
+```text
+HomePage
+├── SiteHeader
+├── HeroSection
+├── ProductMockupSection
+├── AgentFeatureSection
+├── ModelHubSection
+├── SkillWorkflowSection
+├── LocalAgentSection
+├── DiffAndControlSection
+├── UseCasesSection
+├── RoadmapSection
+├── FinalCTASection
+└── SiteFooter
+```
+
+---
+
+## 五、组件级开发拆分
+
+### 1. SiteHeader
+
+功能：
+
+```text
+Logo
+导航
+下载按钮
+移动端菜单
+滚动吸顶
+```
+
+Props：
+
+```ts
+type NavItem = {
+  label: string
+  href: string
+}
+```
+
+样式：
+
+```css
+height: 64px;
+position: sticky;
+top: 0;
+backdrop-filter: blur(18px);
+border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+```
+
+---
+
+### 2. HeroSection
+
+内容：
+
+```text
+Eyebrow：LingStack Beta
+Title：连接所有大模型，让 AI 真正进入开发工作流
+Subtitle：面向中文开发者的多模型 AI Agent 工作台
+CTA：下载 Windows Beta / 查看文档
+Platform：Windows available · macOS / Web / Mobile coming later
+```
+
+布局：
+
+```text
+Desktop：左文案右 Mockup
+Mobile：上下布局
+```
+
+---
+
+### 3. ProductMockup
+
+要求：
+
+```text
+模拟 LingStack 桌面端工作台
+不要放真实截图也可以先做静态 mockup
+结构要像真实产品
+```
+
+Mockup 内容：
+
+```text
+顶部：LingStack / Model / Agent Ready
+左侧：Project / Chat / Terminal / Skills
+中间：Agent 对话
+右侧：Context / Files / Diff
+底部：Command Bar
+```
+
+---
+
+### 4. FeatureSection
+
+复用组件。
+
+Props：
+
+```ts
+type FeatureSectionProps = {
+  eyebrow: string
+  title: string
+  description: string
+  bullets?: string[]
+  visualType: 'workspace' | 'models' | 'skills' | 'terminal' | 'diff'
+  reverse?: boolean
+}
+```
+
+交互：
+
+```text
+滚动进入时轻微 fade-up
+视觉卡片有 hover shadow
+不要大幅动画
+```
+
+---
+
+### 5. ModelHubSection
+
+展示灵栈的多模型能力。
+
+内容：
+
+```text
+支持 GPT / DeepSeek / 豆包 / 通义 / 小米 MiMo / Ollama / 自定义 API
+```
+
+视觉：
+
+```text
+模型卡片矩阵
+每张卡片只显示模型名和状态
+不要做复杂 logo
+```
+
+---
+
+### 6. SkillWorkflowSection
+
+展示 Skill 工作流。
+
+内容：
+
+```text
+Skill 可把重复任务变成标准流程
+```
+
+视觉：
+
+```text
+Step 1 读取上下文
+Step 2 选择 Skill
+Step 3 生成计划
+Step 4 输出修改建议
+Step 5 用户确认
+```
+
+交互：
+
+```text
+鼠标 hover 当前 step 高亮
+移动端变成纵向时间线
+```
+
+---
+
+### 7. UseCasesSection
+
+灵栈应用场景：
+
+```text
+修复前端页面
+分析 Go 后端接口
+排查 Nginx 502
+生成项目文档
+维护 Skill
+本地模型问答
+服务器日志分析
+```
+
+视觉：
+
+```text
+2 x 3 或 3 x 2 卡片
+每张卡片一个标题 + 一句话
+```
+
+---
+
+### 8. RoadmapSection
+
+不要写太虚，写清楚阶段：
+
+```text
+v0.1 桌面端多模型聊天
+v0.2 项目上下文感知
+v0.3 Diff 与确认写入
+v0.4 Terminal Agent
+v0.5 SSH Server Agent
+v0.6 Skill Hub
+v1.0 Web / App / Cloud Sync
+```
+
+---
+
+### 9. FinalCTASection
+
+内容：
+
+```text
+准备让 AI 真正进入你的开发工作流了吗？
+
+[下载 Windows Beta]
+[查看更新日志]
+```
+
+---
+
+## 六、设计系统建议
+
+### 颜色
+
+```css
+:root {
+  --ls-bg: #f7f8fb;
+  --ls-bg-soft: #ffffff;
+  --ls-text: #0f172a;
+  --ls-text-muted: #64748b;
+  --ls-border: rgba(15, 23, 42, 0.10);
+
+  --ls-primary: #111827;
+  --ls-accent-blue: #2563eb;
+  --ls-accent-cyan: #06b6d4;
+  --ls-accent-purple: #7c3aed;
+
+  --ls-card: rgba(255, 255, 255, 0.78);
+  --ls-shadow: 0 24px 80px rgba(15, 23, 42, 0.08);
+}
+```
+
+### 字体
+
+```css
+font-family:
+  Inter,
+  ui-sans-serif,
+  system-ui,
+  -apple-system,
+  BlinkMacSystemFont,
+  "Segoe UI",
+  "PingFang SC",
+  "Microsoft YaHei",
+  sans-serif;
+```
+
+### 字号
+
+```css
+Hero Title: 64px / 72px
+Section Title: 44px / 54px
+Card Title: 18px / 26px
+Body: 16px / 28px
+Small: 13px / 20px
+```
+
+移动端：
+
+```css
+Hero Title: 40px / 48px
+Section Title: 32px / 40px
+```
+
+### 圆角
+
+```css
+卡片：24px
+按钮：999px 或 12px
+Mockup：28px
+小标签：999px
+```
+
+### 动效
+
+```text
+只允许：
+fade-up
+opacity
+translateY 12px
+轻微 scale 0.98 → 1
+hover shadow
+sticky blur
+```
+
+不要：
+
+```text
+霓虹闪烁
+复杂 3D
+粒子背景
+鼠标跟随光
+赛博朋克扫描线
+```
+
+---
+
+## 七、官网首屏文案建议
+
+### 中文版
+
+```text
+LingStack 灵栈
+
+连接所有大模型，
+让 AI 真正进入开发工作流。
+
+面向中文开发者的多模型 AI Agent 工作台。
+支持本地项目上下文、代码修改、终端执行、服务器运维、Skill 编排与自定义 API。
+
+[下载 Windows Beta] [查看文档]
+
+Available for Windows
+macOS / Web / Mobile coming later
+```
+
+### 英文版
+
+```text
+LingStack
+
+One workspace for every model,
+every agent task,
+and every developer workflow.
+
+A multi-model AI Agent workspace for coding, automation, terminal workflows, server operations, and custom skills.
+
+[Download for Windows] [Read the docs]
+```
+
+---
+
+## 八、官网交互细节
+
+### 1. Header 滚动变化
+
+```ts
+window.scrollY > 12
+→ header 添加 is-scrolled
+→ 背景变成 rgba(255,255,255,0.78)
+→ border-bottom 显示
+```
+
+### 2. Section 进入动画
+
+使用 IntersectionObserver：
+
+```ts
+visible 后添加 .is-visible
+```
+
+CSS：
+
+```css
+.reveal {
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity .6s ease, transform .6s ease;
+}
+
+.reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+```
+
+### 3. Mockup 卡片 Hover
+
+```css
+.mockup-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 32px 100px rgba(15, 23, 42, 0.12);
+}
+```
+
+### 4. CTA 按钮
+
+主按钮：
+
+```css
+background: #111827;
+color: #fff;
+border-radius: 999px;
+```
+
+次按钮：
+
+```css
+background: transparent;
+border: 1px solid var(--ls-border);
+color: var(--ls-text);
+```
+
+不要做廉价蓝紫渐变大按钮。灵栈官网这版要更克制。
+
+---
+
+## 九、文件结构建议
+
+如果当前官网是 Vue 项目，建议这样拆：
+
+```text
+src/
+├── pages/
+│   └── HomePage.vue
+├── components/
+│   └── site/
+│       ├── SiteHeader.vue
+│       ├── HeroSection.vue
+│       ├── ProductMockup.vue
+│       ├── FeatureSection.vue
+│       ├── ModelHubSection.vue
+│       ├── SkillWorkflowSection.vue
+│       ├── UseCasesSection.vue
+│       ├── RoadmapSection.vue
+│       ├── FinalCTASection.vue
+│       └── SiteFooter.vue
+├── styles/
+│   ├── site.variables.css
+│   ├── site.base.css
+│   └── site.animations.css
+└── data/
+    ├── features.ts
+    ├── models.ts
+    ├── useCases.ts
+    └── roadmap.ts
+```
+
+---
+
+## 十、给 Trae 的完整开发提示词
+
+你可以直接复制下面这段给 Trae：
+
+```text
+请改造灵栈 LingStack 官网首页，整体参考 OpenAI Codex 官网的产品叙事、极简视觉、产品截图主导、克制高级感，但不要逐像素复制 OpenAI 页面，也不要使用 OpenAI 文案。
+
+目标：
+把灵栈官网改造成一个“多模型 AI Agent 工作台”的高级产品官网，视觉要接近 Codex / OpenAI / Linear / Vercel 这类极简科技产品官网。
+
+页面结构：
+1. SiteHeader
+2. HeroSection
+3. ProductMockupSection
+4. AgentFeatureSection
+5. ModelHubSection
+6. SkillWorkflowSection
+7. LocalAgentSection
+8. DiffAndControlSection
+9. UseCasesSection
+10. RoadmapSection
+11. FinalCTASection
+12. SiteFooter
+
+视觉要求：
+1. 浅色主题为主，背景使用 #f7f8fb / #ffffff。
+2. 大量留白，不要密集卡片。
+3. 主色用黑色/深石墨黑，少量蓝色点缀。
+4. 使用柔和蓝白渐变光晕作为背景装饰，但必须非常克制。
+5. 产品 Mockup 要像真实桌面 AI 工作台，不要用卡通插画。
+6. 不要赛博朋克、不要霓虹、不要 3D 球、不要廉价渐变。
+7. 字体要现代、清晰、克制，优先 Inter + 系统字体。
+8. 按钮要像高级生产力工具：简洁、圆角、微阴影、轻 hover。
+
+首屏内容：
+标题：
+连接所有大模型，让 AI 真正进入开发工作流。
+
+副标题：
+灵栈 LingStack 是面向中文开发者的多模型 AI Agent 工作台，支持本地项目上下文、代码修改、终端执行、服务器运维、Skill 编排与自定义 API。
+
+按钮：
+下载 Windows Beta
+查看文档
+
+平台提示：
+Available for Windows
+macOS / Web / Mobile coming later
+
+Hero 右侧 Mockup：
+模拟 LingStack 桌面端：
+- 顶部：LingStack / Model: DeepSeek / Agent Ready
+- 左侧：Chat / Project / Terminal / Servers / Skills / Models
+- 中间：Agent 对话
+- 右侧：Context / Files / Diff
+- 底部：Command Bar
+
+Feature Sections：
+1. 为真实开发任务而生
+说明灵栈可以读取本地项目、理解文件、辅助修复 Bug 和重构代码。
+
+2. 多模型 Agent 指挥中心
+展示 GPT、DeepSeek、豆包、通义、小米 MiMo、Ollama、自定义 API。
+
+3. 用 Skill 固化你的工作流
+展示 Vue 页面修复、Go 接口排查、Nginx 502、支付回调检查、自我补足 Skill。
+
+4. 从本地项目到终端与服务器
+展示 Local Project / Terminal / Server 三个能力卡片。
+
+5. 每一次修改都清晰可见
+展示 Plan / Diff / Apply / Backup / Rollback。
+
+Roadmap：
+v0.1 桌面端多模型聊天
+v0.2 项目上下文感知
+v0.3 Diff 与确认写入
+v0.4 Terminal Agent
+v0.5 SSH Server Agent
+v0.6 Skill Hub
+v1.0 Web / App / Cloud Sync
+
+交互要求：
+1. Header sticky，滚动后增加半透明背景和 blur。
+2. Section 使用 IntersectionObserver 做轻微 fade-up。
+3. 卡片 hover 只做轻微上浮和阴影。
+4. 移动端响应式适配。
+5. 不要复杂动画。
+6. 不要接入真实下载逻辑，按钮先保留 href 占位。
+
+组件拆分：
+- SiteHeader.vue
+- HeroSection.vue
+- ProductMockup.vue
+- FeatureSection.vue
+- ModelHubSection.vue
+- SkillWorkflowSection.vue
+- UseCasesSection.vue
+- RoadmapSection.vue
+- FinalCTASection.vue
+- SiteFooter.vue
+
+样式拆分：
+- site.variables.css
+- site.base.css
+- site.animations.css
+
+请先完成静态官网首页，不要做后台，不要做登录系统，不要做复杂 API。
+要求代码清晰、组件化、可维护。
+```
+
+---
+
+## 十一、我对灵栈官网的最终建议
+
+你不要把灵栈官网做成“国内 SaaS 营销页”，那种大量渐变、图标卡片、夸张文案会显得低端。
+
+你要做的是：
+
+```text
+Codex 的产品叙事
+OpenAI 的克制留白
+Linear 的卡片精度
+Vercel 的开发者气质
+灵栈自己的多模型 Agent 差异化
+```
+
+核心一句话就够：
+
+> **连接所有大模型，让 AI 真正进入开发工作流。**
+
+这句话要成为官网的灵魂。
+
+[1]: https://openai.com/zh-Hans-CN/codex/ "Codex | OpenAI 打造的 AI 编码助手 | OpenAI"
+[2]: https://developers.openai.com/codex/skills?utm_source=chatgpt.com "Agent Skills – Codex"
+[3]: https://developers.openai.com/codex/cli?utm_source=chatgpt.com "Codex CLI"

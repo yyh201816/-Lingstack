@@ -1,0 +1,67 @@
+{
+  "$schema": "https://raw.githubusercontent.com/nicedoc/tauri/refs/heads/dev/crates/tauri-cli/schema.json",
+  "productName": "灵栈 LingStack",
+  "version": "0.2.9",
+  "identifier": "com.lingstack.app",
+  "build": {
+    "frontendDist": "../dist",
+    "devUrl": "http://localhost:5173",
+    "beforeBuildCommand": "npm run build",
+    "beforeDevCommand": "npm run dev"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "灵栈 LingStack",
+        "width": 1280,
+        "height": 820,
+        "minWidth": 900,
+        "minHeight": 600,
+        "resizable": true,
+        "fullscreen": false,
+        "decorations": true,
+        "center": true
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": [
+      "nsis"
+    ],
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "createUpdaterArtifacts": true,
+    "windows": {
+      "nsis": {
+        "template": "nsis/installer.nsi"
+      }
+    }
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDcxNTAxOEQ2OUQwODU1M0QKUldROVZRaWQxaGhRY2NudlJIZjVvWkRmTWg3dGFOVFMyTlIwdlhsN0pKRWlORmRIeUIxSkR5UGsK",
+      "endpoints": [
+        "https://ai.tadanpay.cn/updates/latest.json",
+        "https://ai.tadanpay.cn/updates/beta/latest.json",
+        "https://ai.tadanpay.cn/updates/alpha/latest.json",
+        "https://ai.tadanpay.cn/updates/rc/latest.json",
+        "https://ai.tadanpay.cn/updates/stable-internal/latest.json",
+        "https://ai.tadanpay.cn/updates/nightly/latest.json"
+      ],
+      "windows": {
+        "installMode": "passive"
+      },
+      "dialog": true,
+      "timeout": 600
+    }
+  }
+}
