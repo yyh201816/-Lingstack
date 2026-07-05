@@ -1,3 +1,4 @@
+<!-- Legacy chat surface: v0.3 主入口已迁移到 codex-shell/MainTaskWorkspace.vue。 -->
 <script setup lang="ts">
 /**
  * ChatPanel — 对话面板

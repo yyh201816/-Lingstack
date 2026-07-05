@@ -1,11 +1,10 @@
-/* LingStack Typography ? ?? TailAdmin + ???? */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;650;700&display=swap');
+/* LingStack Typography Tokens */
 
 :root {
-  --ls-font-sans: "Inter", "PingFang SC", "Microsoft YaHei", "Segoe UI", system-ui, sans-serif;
+  --ls-font-sans: "Inter", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
   --ls-font-mono: "JetBrains Mono", "Cascadia Code", "SF Mono", "Consolas", monospace;
 
-  /* ???? */
+  /* Semantic sizes */
   --ls-font-display: 34px;
   --ls-font-h1: 24px;
   --ls-font-h2: 18px;
@@ -14,7 +13,7 @@
   --ls-font-caption: 12px;
   --ls-font-micro: 11px;
 
-  /* TailAdmin ?? */
+  /* UI sizes */
   --ls-text-xs: 12px;
   --ls-text-sm: 13px;
   --ls-text-md: 14px;
@@ -24,7 +23,7 @@
   --ls-text-theme-sm: 14px;
   --ls-text-theme-xs: 12px;
 
-  /* ?? */
+  /* Font weights */
   --ls-weight-display: 650;
   --ls-weight-title: 600;
   --ls-weight-subtitle: 500;
@@ -34,7 +33,7 @@
   --ls-font-weight-semibold: 600;
   --ls-font-weight-bold: 700;
 
-  /* ?? */
+  /* Line heights */
   --ls-leading-display: 1.2;
   --ls-leading-title: 1.3;
   --ls-leading-body: 1.5;

@@ -105,7 +105,7 @@ const connectedCount = computed(() => mcpStore.connectedCount || 0)
             <span>Diff 摘要</span>
           </div>
           <div class="v02-card__body">
-            <div v-if="!diffStats" class="v02-card__empty">暂无 Diff</div>
+            <div v-if="!diffStats" class="v02-card__empty">暂无 Diff / 当前任务尚未生成可审查变更</div>
             <template v-else>
               <div class="v02-card__diff-stats">
                 <span class="v02-card__diff-added">+{{ diffStats.added }}</span>
@@ -155,7 +155,7 @@ const connectedCount = computed(() => mcpStore.connectedCount || 0)
 .v02-right {
   display: flex;
   flex-direction: column;
-  width: 380px;
+  width: 320px;
   height: 100%;
   flex-shrink: 0;
   overflow: hidden;

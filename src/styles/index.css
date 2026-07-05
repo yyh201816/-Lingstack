@@ -1,2 +1,18 @@
-@import './tokens/color.css';@import './tokens/spacing.css';@import './tokens/radius.css';@import './tokens/shadow.css';@import './tokens/motion.css';@import './tokens/typography.css';@import './themes/light.css';@import './themes/dark.css';@import '@xterm/xterm/css/xterm.css';
-@import './base.css';:root{color-scheme:light}[data-theme="dark"]{color-scheme:dark}
+@import "./tokens/color.css";
+@import "./tokens/spacing.css";
+@import "./tokens/radius.css";
+@import "./tokens/shadow.css";
+@import "./tokens/motion.css";
+@import "./tokens/typography.css";
+@import "./themes/light.css";
+@import "./themes/dark.css";
+@import "@xterm/xterm/css/xterm.css";
+@import "./base.css";
+
+:root {
+  color-scheme: light;
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+}

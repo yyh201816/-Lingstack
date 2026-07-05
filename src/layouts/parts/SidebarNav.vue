@@ -1,3 +1,4 @@
+<!-- Legacy shell part: superseded by src/layouts/codex-shell/parts/LeftSidebar.vue. -->
 <script setup lang="ts">
 /**
  * SidebarNav — LingStack 工作台视图切换器

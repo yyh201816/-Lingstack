@@ -32,12 +32,22 @@ export const useAgentTaskStore = defineStore("agentTask", () => {
 
   const runningTasks = computed(() =>
     tasks.value.filter((task) =>
-      ["created", "building_context", "planning", "waiting_tool", "executing_tool", "generating_diff", "waiting_confirm", "applying_patch"].includes(task.status),
+      [
+        "created",
+        "building_context",
+        "planning",
+        "waiting_tool",
+        "executing_tool",
+        "patch_requested",
+        "generating_diff",
+        "waiting_confirm",
+        "applying_patch",
+      ].includes(task.status),
     ),
   )
 
   const completedTasks = computed(() =>
-    tasks.value.filter((task) => task.status === "completed"),
+    tasks.value.filter((task) => task.status === "completed" || task.status === "analysis_done"),
   )
 
   function getLatestTaskByThread(threadId: string): AgentTask | null {

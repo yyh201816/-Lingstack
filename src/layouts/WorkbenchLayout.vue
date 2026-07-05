@@ -1,3 +1,4 @@
+<!-- Legacy shell: superseded by src/layouts/codex-shell/CodexWorkbench.vue. -->
 <script setup lang="ts">
 /**
  * WorkbenchLayout — LingStack vNext 桌面工作台总壳

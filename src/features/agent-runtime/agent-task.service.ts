@@ -21,6 +21,7 @@ interface RunTaskOptions {
 interface ProjectOverview {
   summary: string
   importantFiles: string[]
+  topLevelEntryCount: number
 }
 
 interface ParsedPatchFile {
@@ -38,7 +39,7 @@ function getProjectDisplayName(projectPath?: string): string {
 }
 
 function makeTitle(type: AgentTaskType, userRequest: string, projectName?: string): string {
-  const prefix = projectName ? `${projectName}: ` : ""
+  const prefix = projectName ? `${projectName}：` : ""
   const fallback = userRequest.trim().slice(0, 30)
 
   if (type === "self_repair") return `${prefix}自修复分析`
@@ -104,14 +105,14 @@ function proposalToTaskDiff(proposal: PatchProposal): { diff: DiffSummary; chang
 async function collectProjectOverview(projectPath?: string): Promise<ProjectOverview> {
   if (!projectPath) {
     return {
-      summary: "当前未打开项目，暂无项目目录上下文。",
+      summary: "当前未打开项目，仅能基于任务描述进行分析。",
       importantFiles: [],
+      topLevelEntryCount: 0,
     }
   }
 
   try {
     const rootEntries = await TauriService.listDir(projectPath)
-    const visibleEntries = rootEntries.slice(0, 16)
     const importantFiles = rootEntries
       .filter((entry) =>
         entry.is_file &&
@@ -120,17 +121,15 @@ async function collectProjectOverview(projectPath?: string): Promise<ProjectOver
       .map((entry) => entry.path)
 
     return {
-      summary: [
-        `已读取项目根目录：${getProjectDisplayName(projectPath)}`,
-        `顶层条目：${rootEntries.length}`,
-        ...visibleEntries.map((entry) => `${entry.is_directory ? "[目录]" : "[文件]"} ${entry.name}`),
-      ].join("\n"),
+      summary: `项目 ${getProjectDisplayName(projectPath)} 已读取，共发现 ${rootEntries.length} 个顶层条目。`,
       importantFiles,
+      topLevelEntryCount: rootEntries.length,
     }
   } catch (error) {
     return {
       summary: `读取项目目录失败：${String(error)}`,
       importantFiles: [],
+      topLevelEntryCount: 0,
     }
   }
 }
@@ -176,7 +175,7 @@ function buildExecutionPrompt(request: string, opts: RunTaskOptions, contextSumm
     "如果你非常确定需要修改当前文件，请只在回复末尾附加一个 lingstack_patch 代码块。",
     "补丁代码块格式必须是 JSON，文件内容必须是完整新内容：",
     "```lingstack_patch",
-    "{\"files\":[{\"path\":\"src/example.ts\",\"content\":\"完整文件内容\"}]}",
+    '{"files":[{"path":"src/example.ts","content":"完整文件内容"}]}',
     "```",
     "",
     "如果不能确定完整新内容，就只给分析和建议，不要输出补丁块。",
@@ -187,6 +186,34 @@ function buildExecutionPrompt(request: string, opts: RunTaskOptions, contextSumm
     `项目上下文：\n${contextSummary}`,
     "",
     `用户任务：${request}`,
+  ].join("\n")
+}
+
+function buildPatchPrompt(task: AgentTask, contextSummary: string): string {
+  const latestAssistantMessages = task.messages
+    .filter((message) => message.role === "assistant")
+    .slice(-2)
+    .map((message) => message.content.trim())
+    .filter(Boolean)
+    .join("\n\n")
+
+  return [
+    "你现在需要继续生成可应用的补丁提案。",
+    "请避免重复目录扫描结果，不要输出大段项目树。",
+    "如果已经具备足够信息，请直接给出 lingstack_patch 代码块。",
+    "如果信息仍不足，请先说明缺少什么，再谨慎给出下一步建议。",
+    "补丁代码块必须使用完整文件内容，不接受片段 diff：",
+    "```lingstack_patch",
+    '{"files":[{"path":"src/example.ts","content":"完整文件内容"}]}',
+    "```",
+    "",
+    `项目：${task.projectName || getProjectDisplayName(task.projectPath)}`,
+    task.activeFile ? `当前文件：${task.activeFile}` : "当前文件：未选择",
+    `原始任务：${task.userRequest}`,
+    "",
+    latestAssistantMessages ? `已有分析：\n${latestAssistantMessages}` : "已有分析：暂无",
+    "",
+    `项目上下文：\n${contextSummary}`,
   ].join("\n")
 }
 
@@ -215,6 +242,10 @@ function parsePatchFromText(text: string, opts: RunTaskOptions): ParsedPatchFile
   } catch {
     return []
   }
+}
+
+function stripPatchBlock(text: string): string {
+  return text.replace(/```lingstack_patch[\s\S]*?```/g, "").trim()
 }
 
 async function streamLLM(
@@ -264,6 +295,35 @@ function fallbackPlan(type: AgentTaskType, request: string, projectName?: string
   ].join("\n")
 }
 
+function fallbackAnalysis(projectName?: string, hasProject = false): string {
+  if (hasProject) {
+    return `已完成第一轮分析。当前项目：${projectName || "未命名项目"}。如需继续修改，我可以下一步生成补丁提案。`
+  }
+
+  return "已收到任务。打开项目后，我可以读取上下文并继续生成更精确的计划或补丁。"
+}
+
+function buildContextNotice(task: AgentTask, overview: ProjectOverview): string {
+  if (!task.projectPath) {
+    return "已读取基础任务上下文。当前未打开项目，后续分析将仅基于你的描述。"
+  }
+
+  const importantCount = overview.importantFiles.length
+  return `已读取项目上下文：${task.projectName || getProjectDisplayName(task.projectPath)}，顶层条目 ${overview.topLevelEntryCount} 个，关键文件 ${importantCount} 个。`
+}
+
+async function buildTaskContext(projectPath?: string): Promise<ProjectOverview & { contextSummary: string }> {
+  const overview = await collectProjectOverview(projectPath)
+  const importantFilesText = await readImportantFiles(overview.importantFiles)
+
+  return {
+    ...overview,
+    contextSummary: importantFilesText
+      ? `${overview.summary}\n\n关键文件摘录：\n${importantFilesText}`
+      : overview.summary,
+  }
+}
+
 export function useAgentTaskService() {
   const store = useAgentTaskStore()
 
@@ -278,14 +338,9 @@ export function useAgentTaskService() {
       const contextStep = store.addStep(taskId, "读取项目上下文")
       store.updateStep(taskId, contextStep.id, "running")
 
-      const overview = await collectProjectOverview(opts.projectPath)
-      const importantFilesText = await readImportantFiles(overview.importantFiles)
-      const contextSummary = importantFilesText
-        ? `${overview.summary}\n\n关键文件摘录：\n${importantFilesText}`
-        : overview.summary
-
-      store.addMessage(taskId, "system", contextSummary)
+      const contextBundle = await buildTaskContext(opts.projectPath)
       store.updateStep(taskId, contextStep.id, "done")
+      store.addMessage(taskId, "system", buildContextNotice(task, contextBundle))
 
       store.updateTaskStatus(taskId, "planning")
       const planStep = store.addStep(taskId, "生成执行计划")
@@ -294,7 +349,7 @@ export function useAgentTaskService() {
       const workspaceContext = buildWorkspaceContext(taskId, userRequest, opts)
       const planText = isConfigured()
         ? await streamLLM(
-            [{ role: "user", content: buildPlanPrompt(type, userRequest, opts, contextSummary) }],
+            [{ role: "user", content: buildPlanPrompt(type, userRequest, opts, contextBundle.contextSummary) }],
             workspaceContext,
             () => fallbackPlan(type, userRequest, opts.projectName),
           )
@@ -304,21 +359,25 @@ export function useAgentTaskService() {
       store.updateStep(taskId, planStep.id, "done")
 
       store.updateTaskStatus(taskId, "executing_tool")
-      const executionStep = store.addStep(taskId, "生成执行结果")
+      const executionStep = store.addStep(taskId, "生成分析结果")
       store.updateStep(taskId, executionStep.id, "running")
 
       const executionText = isConfigured()
         ? await streamLLM(
-            [{ role: "user", content: buildExecutionPrompt(userRequest, opts, contextSummary) }],
+            [{ role: "user", content: buildExecutionPrompt(userRequest, opts, contextBundle.contextSummary) }],
             workspaceContext,
-            () => fallbackPlan(type, userRequest, opts.projectName),
+            () => fallbackAnalysis(opts.projectName, Boolean(opts.projectPath)),
           )
-        : fallbackPlan(type, userRequest, opts.projectName)
-
-      store.addMessage(taskId, "assistant", executionText)
-      store.updateStep(taskId, executionStep.id, "done")
+        : fallbackAnalysis(opts.projectName, Boolean(opts.projectPath))
 
       const parsedPatch = parsePatchFromText(executionText, opts)
+      const visibleExecution = stripPatchBlock(executionText)
+
+      if (visibleExecution) {
+        store.addMessage(taskId, "assistant", visibleExecution)
+      }
+
+      store.updateStep(taskId, executionStep.id, "done")
 
       if (opts.projectPath && parsedPatch.length > 0) {
         store.updateTaskStatus(taskId, "generating_diff")
@@ -338,13 +397,83 @@ export function useAgentTaskService() {
         return task
       }
 
-      store.addMessage(taskId, "system", "本轮没有生成真实文件变更，审查面板保持暂无变更。")
-      store.updateTaskStatus(taskId, "completed")
+      store.addMessage(taskId, "system", "分析完成，可继续生成补丁。当前还没有可审查的 Diff。")
+      store.updateTaskStatus(taskId, "analysis_done")
       return task
     } catch (error) {
       store.updateTaskStatus(taskId, "failed", String(error))
       store.addMessage(taskId, "system", `任务执行失败：${String(error)}`)
       throw error
+    }
+  }
+
+  async function continueGeneratePatch(taskId: string): Promise<void> {
+    const task = store.tasks.find((item) => item.id === taskId)
+    if (!task) return
+
+    if (!task.projectPath) {
+      store.addMessage(taskId, "system", "当前未打开项目，无法继续生成补丁。请先打开项目。")
+      store.updateTaskStatus(taskId, "analysis_done")
+      return
+    }
+
+    store.updateTaskStatus(taskId, "patch_requested")
+    const step = store.addStep(taskId, "继续生成补丁")
+    store.updateStep(taskId, step.id, "running")
+
+    try {
+      const contextBundle = await buildTaskContext(task.projectPath)
+      const workspaceContext = buildWorkspaceContext(taskId, task.userRequest, {
+        projectPath: task.projectPath,
+        projectName: task.projectName,
+        activeFile: task.activeFile,
+        modelName: task.modelName,
+        threadId: task.threadId,
+      })
+
+      const patchText = isConfigured()
+        ? await streamLLM(
+            [{ role: "user", content: buildPatchPrompt(task, contextBundle.contextSummary) }],
+            workspaceContext,
+            () => "已完成补丁生成尝试，但当前上下文仍不足以输出安全补丁。你可以指定目标文件后继续。",
+          )
+        : "已完成补丁生成尝试，但当前未配置模型，暂时无法输出真实补丁。"
+
+      const parsedPatch = parsePatchFromText(patchText, {
+        projectPath: task.projectPath,
+        projectName: task.projectName,
+        activeFile: task.activeFile,
+        modelName: task.modelName,
+        threadId: task.threadId,
+      })
+      const visibleText = stripPatchBlock(patchText)
+
+      if (visibleText) {
+        store.addMessage(taskId, "assistant", visibleText)
+      }
+
+      if (parsedPatch.length > 0) {
+        store.updateTaskStatus(taskId, "generating_diff")
+        const proposal = await createPatchProposal({
+          projectPath: task.projectPath,
+          taskId,
+          files: parsedPatch,
+        })
+        const { diff, changedFiles } = proposalToTaskDiff(proposal)
+        store.setPatchProposal(taskId, proposal.id, diff, changedFiles)
+        store.updateStep(taskId, step.id, "done")
+        store.addMessage(taskId, "system", `已生成新的补丁提案：${proposal.id}，可以前往审查并确认应用。`)
+        store.updateTaskStatus(taskId, "waiting_confirm")
+        return
+      }
+
+      store.updateStep(taskId, step.id, "done")
+      store.addMessage(taskId, "system", "分析完成，可继续生成补丁。当前仍未生成可应用变更。")
+      store.updateTaskStatus(taskId, "analysis_done")
+    } catch (error) {
+      store.updateStep(taskId, step.id, "failed", String(error))
+      store.updateTaskStatus(taskId, "failed", String(error))
+      store.addMessage(taskId, "system", `补丁生成失败：${String(error)}`)
     }
   }
 
@@ -381,7 +510,7 @@ export function useAgentTaskService() {
     store.updatePatchStatus(taskId, "applied")
     store.updateStep(taskId, step.id, "done")
     store.updateTaskStatus(taskId, "completed")
-    store.addMessage(taskId, "system", "补丁已应用到本地文件。你仍可以从任务区执行回滚。")
+    store.addMessage(taskId, "system", "补丁已应用到本地文件。你仍然可以从任务区执行回滚。")
   }
 
   async function rollbackTask(taskId: string): Promise<void> {
@@ -466,5 +595,5 @@ export function useAgentTaskService() {
     return task
   }
 
-  return { runTask, approveTask, rejectTask, rollbackTask, runChatTask }
+  return { runTask, continueGeneratePatch, approveTask, rejectTask, rollbackTask, runChatTask }
 }

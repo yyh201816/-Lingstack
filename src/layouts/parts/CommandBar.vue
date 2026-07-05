@@ -1,3 +1,4 @@
+<!-- Legacy shell part: superseded by src/layouts/codex-shell/parts/MainTaskWorkspace.vue. -->
 <script setup lang="ts">
 /**
  * CommandBar — LingStack 底部主控制器

@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref, watch } from "vue"
-import { FileSearch, Server, Terminal, Zap } from "lucide-vue-next"
+import { computed, onMounted, onUnmounted, ref } from "vue"
+import { Server, Sparkles, Terminal } from "lucide-vue-next"
 import WorkbenchTopBar from "./parts/WorkbenchTopBar.vue"
 import LeftSidebar from "./parts/LeftSidebar.vue"
 import MainTaskWorkspace from "./parts/MainTaskWorkspace.vue"
@@ -25,12 +25,12 @@ import { useBetaFeedbackStore } from "@/features/beta/store/beta-feedback.store"
 import { useAgentTaskStore } from "@/features/agent-runtime/agent-task.store"
 import { initBuiltinTools } from "@/features/tool-runtime/tools"
 
-type NavView = "chat" | "project" | "skills" | "review" | "terminal" | "server"
+type NavView = "chat" | "project" | "task" | "skills" | "review" | "terminal" | "server"
 
 const leftCollapsed = ref(false)
-const rightVisible = ref(true)
 const showSettings = ref(false)
 const activeNavView = ref<NavView>("chat")
+const manualReviewPane = ref(false)
 
 const projectStore = useProjectStore()
 const threadStore = useThreadStore()
@@ -50,8 +50,48 @@ const confirmMessage = ref("")
 const confirmDetail = ref("")
 let pendingConfirmResolve: ((value: boolean) => void) | null = null
 
-const hasProject = computed(() => Boolean(projectStore.currentProjectPath))
-const hasDiff = computed(() => Boolean(agentTaskStore.activeTask?.diff))
+const activeThreadId = computed(() => threadStore.activeThread?.id || "")
+const activeTask = computed(() =>
+  activeThreadId.value ? agentTaskStore.getLatestTaskByThread(activeThreadId.value) : null,
+)
+
+const autoReviewVisible = computed(() => {
+  const task = activeTask.value
+  if (!task) return false
+
+  return Boolean(task.diff)
+    || task.status === "waiting_confirm"
+    || task.status === "applying_patch"
+    || (task.status === "completed" && task.patchStatus === "applied")
+})
+
+const shouldShowReviewPane = computed(() =>
+  !showSettings.value && (manualReviewPane.value || autoReviewVisible.value),
+)
+
+const placeholderMeta = computed(() => {
+  if (activeNavView.value === "skills") {
+    return {
+      title: "Skill 中心即将接入",
+      desc: "内置 Skill 与自定义 Skill 管理能力正在接入中。",
+      icon: Sparkles,
+    }
+  }
+
+  if (activeNavView.value === "terminal") {
+    return {
+      title: "终端 Agent 即将接入",
+      desc: "当前不会假装执行命令，终端能力会在后续版本接入。",
+      icon: Terminal,
+    }
+  }
+
+  return {
+    title: "服务器 Agent 即将接入",
+    desc: "当前不会假装连接服务器，部署与远程执行能力将后续接入。",
+    icon: Server,
+  }
+})
 
 function showConfirm(title: string, message: string, detail?: string): Promise<boolean> {
   confirmTitle.value = title
@@ -75,27 +115,25 @@ function handleCancel() {
   pendingConfirmResolve = null
 }
 
-watch(
-  () => reviewStore.activeReviewTab,
-  (tab) => {
-    if (tab === "review" || tab === "terminal" || tab === "git") {
-      rightVisible.value = true
-    }
-  },
-)
-
 function handleOpenSettings() {
   showSettings.value = !showSettings.value
 }
 
-function handleNavChange(view: string) {
-  activeNavView.value = view as NavView
-  rightVisible.value = true
+function handleNavChange(view: NavView) {
+  activeNavView.value = view
 
   if (view === "review") {
+    manualReviewPane.value = true
     reviewStore.setActiveReviewTab("review")
-  } else if (view === "terminal") {
-    reviewStore.setActiveReviewTab("terminal")
+    return
+  }
+
+  if (view === "task" || view === "chat" || view === "project") {
+    reviewStore.setActiveReviewTab("review")
+  }
+
+  if (!autoReviewVisible.value) {
+    manualReviewPane.value = false
   }
 }
 
@@ -135,6 +173,13 @@ async function recoverSession() {
   }
 }
 
+function handleCloseReviewPane() {
+  manualReviewPane.value = false
+  if (!autoReviewVisible.value && activeNavView.value === "review") {
+    activeNavView.value = "chat"
+  }
+}
+
 onMounted(async () => {
   initBuiltinTools()
   agentTaskStore.hydrate()
@@ -159,54 +204,29 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="v02-workbench">
+  <div class="v03-workbench">
     <WorkbenchTopBar @toggle-left="leftCollapsed = !leftCollapsed" @open-settings="handleOpenSettings" />
 
-    <div class="v02-workbench__body">
+    <div class="v03-workbench__body">
       <LeftSidebar
         :collapsed="leftCollapsed"
+        :active-view="activeNavView"
         @toggle-collapse="leftCollapsed = !leftCollapsed"
         @open-settings="handleOpenSettings"
-        @open-mcp="rightVisible = true"
+        @open-mcp="manualReviewPane = true"
         @nav-change="handleNavChange"
       />
 
       <template v-if="!showSettings">
-        <div v-if="activeNavView === 'skills'" class="v02-workbench__placeholder">
-          <div class="v02-placeholder">
-            <Zap :size="32" class="v02-placeholder__icon" />
-            <h2 class="v02-placeholder__title">Skill 中心即将接入</h2>
-            <p class="v02-placeholder__desc">内置 Skill 与自定义 Skill 管理能力正在接入中。</p>
-            <div class="v02-placeholder__actions">
-              <button class="v02-placeholder__btn" disabled>创建 Skill</button>
-              <button class="v02-placeholder__btn" disabled>查看内置 Skill</button>
+        <div v-if="activeNavView === 'skills' || activeNavView === 'terminal' || activeNavView === 'server'" class="v03-workbench__placeholder">
+          <div class="v03-placeholder">
+            <component :is="placeholderMeta.icon" :size="32" class="v03-placeholder__icon" />
+            <h2 class="v03-placeholder__title">{{ placeholderMeta.title }}</h2>
+            <p class="v03-placeholder__desc">{{ placeholderMeta.desc }}</p>
+            <div v-if="activeNavView === 'skills'" class="v03-placeholder__actions">
+              <button class="v03-placeholder__btn" disabled>创建 Skill</button>
+              <button class="v03-placeholder__btn" disabled>查看内置 Skill</button>
             </div>
-          </div>
-        </div>
-
-        <div v-else-if="activeNavView === 'terminal'" class="v02-workbench__placeholder">
-          <div class="v02-placeholder">
-            <Terminal :size="32" class="v02-placeholder__icon" />
-            <h2 class="v02-placeholder__title">终端 Agent 即将接入</h2>
-            <p class="v02-placeholder__desc">当前不会假装执行命令，终端能力将在后续版本接入。</p>
-          </div>
-        </div>
-
-        <div v-else-if="activeNavView === 'server'" class="v02-workbench__placeholder">
-          <div class="v02-placeholder">
-            <Server :size="32" class="v02-placeholder__icon" />
-            <h2 class="v02-placeholder__title">服务器 Agent 即将接入</h2>
-            <p class="v02-placeholder__desc">当前不会假装连接服务器，SSH 与部署能力后续接入。</p>
-          </div>
-        </div>
-
-        <div v-else-if="activeNavView === 'review'" class="v02-workbench__placeholder">
-          <div class="v02-placeholder">
-            <FileSearch :size="32" class="v02-placeholder__icon" />
-            <h2 class="v02-placeholder__title">{{ hasDiff ? "审查面板已同步到右侧" : "暂无可审查变更" }}</h2>
-            <p class="v02-placeholder__desc">
-              {{ hasDiff ? "当前任务的变更文件和 Diff 摘要已显示在右侧审查面板。" : "当任务产生真实代码变更后，这里和右侧会同步显示审查内容。" }}
-            </p>
           </div>
         </div>
 
@@ -216,7 +236,7 @@ onUnmounted(() => {
         />
       </template>
 
-      <RightReviewPane v-if="rightVisible && !showSettings" @close="rightVisible = false" />
+      <RightReviewPane v-if="shouldShowReviewPane" @close="handleCloseReviewPane" />
     </div>
 
     <BetaFeedbackDialog v-if="betaStore.showFeedbackDialog" @close="betaStore.closeFeedbackDialog()" />
@@ -231,13 +251,13 @@ onUnmounted(() => {
     @cancel="handleCancel"
   />
 
-  <LsDrawer :visible="showSettings" title="设置" @close="showSettings = false">
+  <LsDrawer :visible="showSettings" title="设置" width="560px" @close="showSettings = false">
     <SettingsPanel />
   </LsDrawer>
 </template>
 
 <style scoped>
-.v02-workbench {
+.v03-workbench {
   display: flex;
   flex-direction: column;
   width: 100vw;
@@ -247,54 +267,54 @@ onUnmounted(() => {
   color: var(--ls-text-primary, #111827);
 }
 
-.v02-workbench__body {
+.v03-workbench__body {
   display: flex;
   flex: 1;
   min-height: 0;
   overflow: hidden;
 }
 
-.v02-workbench__placeholder {
+.v03-workbench__placeholder {
   display: flex;
   flex: 1;
   align-items: center;
   justify-content: center;
 }
 
-.v02-placeholder {
+.v03-placeholder {
   max-width: 420px;
   padding: 40px;
   text-align: center;
 }
 
-.v02-placeholder__icon {
+.v03-placeholder__icon {
   margin-bottom: 16px;
   color: var(--ls-text-subtle);
-  opacity: 0.4;
+  opacity: 0.45;
 }
 
-.v02-placeholder__title {
+.v03-placeholder__title {
   margin: 0 0 8px;
   font-size: 16px;
   font-weight: 650;
   color: var(--ls-text-muted);
 }
 
-.v02-placeholder__desc {
+.v03-placeholder__desc {
   margin: 0;
   font-size: 13px;
   line-height: 1.6;
   color: var(--ls-text-subtle);
 }
 
-.v02-placeholder__actions {
+.v03-placeholder__actions {
   display: flex;
   justify-content: center;
   gap: 8px;
   margin-top: 16px;
 }
 
-.v02-placeholder__btn {
+.v03-placeholder__btn {
   padding: 8px 14px;
   border: 1px solid var(--ls-border-default);
   border-radius: 10px;

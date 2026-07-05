@@ -16,6 +16,8 @@ export type AgentTaskStatus =
   | "planning"
   | "waiting_tool"
   | "executing_tool"
+  | "analysis_done"
+  | "patch_requested"
   | "generating_diff"
   | "waiting_confirm"
   | "applying_patch"

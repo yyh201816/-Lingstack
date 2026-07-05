@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch, withDefaults } from "vue"
+import { computed, ref, watch } from "vue"
 import {
   AlertCircle,
   Bot,
@@ -66,6 +66,9 @@ const showChatWelcome = computed(() => !showProjectView.value && !hasThread.valu
 const canApplyPatch = computed(() =>
   activeTask.value?.status === "waiting_confirm" && activeTask.value.patchStatus === "proposed",
 )
+const canContinuePatch = computed(() =>
+  activeTask.value?.status === "analysis_done",
+)
 const canRollbackPatch = computed(() => activeTask.value?.patchStatus === "applied")
 
 const currentStatusLabel = computed(() => {
@@ -78,6 +81,8 @@ const currentStatusLabel = computed(() => {
     planning: "生成计划中",
     waiting_tool: "等待工具执行",
     executing_tool: "正在分析",
+    analysis_done: "分析完成",
+    patch_requested: "正在生成补丁",
     generating_diff: "生成 Diff",
     waiting_confirm: "等待确认",
     applying_patch: "应用变更中",
@@ -159,6 +164,11 @@ function handleRejectPatch() {
 async function handleRollbackPatch() {
   if (!activeTask.value) return
   await agentTaskService.rollbackTask(activeTask.value.id)
+}
+
+async function handleContinuePatch() {
+  if (!activeTask.value) return
+  await agentTaskService.continueGeneratePatch(activeTask.value.id)
 }
 
 watch(
@@ -288,7 +298,7 @@ function handleKeydown(event: KeyboardEvent) {
             <span v-if="activeTask?.patchProposalId">补丁：{{ activeTask.patchProposalId }}</span>
           </div>
         </div>
-        <div v-if="canApplyPatch || canRollbackPatch" class="v02-agent-bar__actions">
+        <div v-if="canApplyPatch || canContinuePatch || canRollbackPatch" class="v02-agent-bar__actions">
           <template v-if="canApplyPatch">
             <button class="v02-agent-action v02-agent-action--primary" @click="handleApplyPatch">
               <CheckCircle2 :size="14" />
@@ -299,6 +309,10 @@ function handleKeydown(event: KeyboardEvent) {
               拒绝
             </button>
           </template>
+          <button v-else-if="canContinuePatch" class="v02-agent-action v02-agent-action--primary" @click="handleContinuePatch">
+            <Send :size="14" />
+            继续生成补丁
+          </button>
           <button v-else-if="canRollbackPatch" class="v02-agent-action" @click="handleRollbackPatch">
             <RotateCcw :size="14" />
             回滚补丁

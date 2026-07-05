@@ -1,11 +1,11 @@
 {
   "$schema": "https://raw.githubusercontent.com/nicedoc/tauri/refs/heads/dev/crates/tauri-cli/schema.json",
   "productName": "灵栈 LingStack",
-  "version": "0.2.9",
+  "version": "0.3.0",
   "identifier": "com.lingstack.app",
   "build": {
     "frontendDist": "../dist",
-    "devUrl": "http://localhost:5173",
+    "devUrl": "http://localhost:1730",
     "beforeBuildCommand": "npm run build",
     "beforeDevCommand": "npm run dev"
   },

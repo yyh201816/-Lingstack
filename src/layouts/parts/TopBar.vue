@@ -1,3 +1,4 @@
+<!-- Legacy shell part: superseded by src/layouts/codex-shell/parts/WorkbenchTopBar.vue. -->
 <script setup lang="ts">
 /**
  * TopBar — 桌面工具状态栏，48px

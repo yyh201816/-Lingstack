@@ -1,6 +1,6 @@
 [package]
 name = "lingstack"
-version = "0.2.9"
+version = "0.3.0"
 description = "灵栈 LingStack - 桌面本地 AI Agent 工作台"
 authors = ["LingStack"]
 edition = "2021"
